@@ -9,3 +9,4 @@ resource "azurerm_bastion_host" "bastion_host" {
     public_ip_address_id = var.bastion_public_ip
   }
 }
+

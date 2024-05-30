@@ -61,3 +61,6 @@ variable "appgw_to_cluster_peering_name" {
 variable "cluster_to_appgw_peering_name" {
   description = "Name of the peering from Cluster to AppGW VNet"
 }
+
+variable "bastion_subnet_address_prefixes" {}
+

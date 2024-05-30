@@ -62,3 +62,11 @@ resource "azurerm_virtual_network_peering" "ClustertoAppGWVnetPeering" {
   remote_virtual_network_id    = azurerm_virtual_network.apiVnet.id
   allow_virtual_network_access = true
 }
+
+# Subred en la que estara el Bastion
+resource "azurerm_subnet" "AzureBastionSubnet" {
+  name                 = "AzureBastionSubnet"
+  resource_group_name  = var.resource_group_name
+  virtual_network_name = azurerm_virtual_network.clusterVnet.name
+  address_prefixes     = var.bastion_subnet_address_prefixes
+}
