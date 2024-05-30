@@ -25,7 +25,7 @@ resource "azurerm_kubernetes_cluster" "aks_cluster" {
     secret_rotation_enabled = var.secret_rotation_enabled
   }
 
-  private_cluster_enabled = var.private_cluster_enabled
+  //private_cluster_enabled = var.private_cluster_enabled
 }
 
 
@@ -34,3 +34,16 @@ resource "local_file" "kubeconfig" {
   filename   = var.local_file_name
   content    = azurerm_kubernetes_cluster.aks_cluster.kube_config_raw
 }
+
+/*
+resource "kubernetes_service_account" "workload_identity_sa" {
+  depends_on = [azurerm_kubernetes_cluster.aks_cluster]
+  metadata {
+    name      = var.name_workload_identity
+    namespace = var.namespace
+    annotations = {
+      "azure.workload.identity/client-id" = var.user_assigned_client_id
+    }
+  }
+}
+*/

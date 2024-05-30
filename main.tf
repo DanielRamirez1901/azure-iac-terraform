@@ -89,12 +89,15 @@ module "aks_cluster" {
   identity_type           = "SystemAssigned"
   local_file_name         = "kubeconfig"
   secret_rotation_enabled = true
-  private_cluster_enabled = true
+  //name_workload_identity  = "workload-identity-sa"
+  //namespace               = "default"
+  //user_assigned_client_id = module.identity.client_id
+  //private_cluster_enabled = true
 }
 
 module "key_vault" {
   source                      = "./modules/key_vault"
-  key_vault_name              = "myKeyVault-1099"
+  key_vault_name              = "myKeyVault-109988"
   resource_group_name         = module.resource_group.resource_group_name
   location                    = module.resource_group.location
   tenant_id                   = data.azurerm_client_config.current.tenant_id
@@ -106,8 +109,8 @@ module "key_vault" {
   key_permissions             = ["Get", "Create", "List", "Delete", "Purge", "Recover", "SetRotationPolicy", "GetRotationPolicy"]
   secret_permissions          = ["Get", "Set", "List", "Delete", "Purge", "Recover"]
   certificate_permissions     = ["Get"]
-  secret_names                = ["mySecret1", "mySecret2"]
-  secret_values               = ["szechuan", "shashlik"]
+  secret_names                = ["mySecret1", "mySecret2", "webserver-config", "webserver-properties"]
+  secret_values               = ["szechuan", "shashlik", "config-value", "properties-value"]
   key_names                   = ["myKey1", "myKey2"]
   key_types                   = ["RSA", "RSA"]
   key_sizes                   = [2048, 2048]
@@ -115,8 +118,26 @@ module "key_vault" {
   time_before_expiry          = "P30D"
   expire_after                = "P90D"
   notify_before_expiry        = "P29D"
+  user_assigned_identity_principal_id = module.identity.principal_id
+  aks_secret_provider_id      = module.aks_cluster.secret_provider
 }
 
+
+module "identity" {
+  source              = "./modules/identity"
+  name                = "myUserAssignedIdentity"
+  resource_group_name = module.resource_group.resource_group_name
+  location            = module.resource_group.location
+  /*
+  credential_aks_name = "aksfederatedidentity"
+  issuer              = module.aks_cluster.issuer  
+  subject             = module.aks_cluster.cluster_name 
+  audience            = ["api://AzureADTokenExchange"]
+  */
+}
+
+
+/*
 module "helm" {
   source                 = "./modules/helm"
   helm_name              = "aks-secret-provider"
@@ -133,7 +154,7 @@ module "helm" {
   cluster_ca_certificate = module.aks_cluster.cluster_ca_certificate
 }
 
-
+*/
 
 module "container_registry" {
   source                  = "./modules/container_registry"
@@ -149,8 +170,12 @@ module "role_assignment" {
   role_definition_name             = "AcrPull"
   scope                            = module.container_registry.scope
   skip_service_principal_aad_check = true
+  scope_key_vault                  = module.key_vault.key_vault_id     
+  role_definition_name_key_vault   = "Key Vault Secrets User"
+  principal_id_key_vault           = module.identity.principal_id
 }
 
+/*
 module "bastion_host" {
   source                  = "./modules/bastion_host"
   bastion_name            = "kratos-controller"
@@ -160,7 +185,7 @@ module "bastion_host" {
   cluster_subnet_id       = module.networking.cluster_subnet_id
   bastion_public_ip       = module.networking.bastionip
 }
-
+*/
 output "resource_group_name" {
   value = module.resource_group.resource_group_name
 }
@@ -184,7 +209,7 @@ resource "null_resource" "execute_script" {
     module.aks_cluster,
     module.role_assignment,
     module.container_registry,
-    module.helm,
+    //module.helm,
     module.networking,
     module.resource_group
 

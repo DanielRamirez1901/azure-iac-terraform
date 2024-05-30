@@ -50,6 +50,16 @@ variable "secret_rotation_enabled" {
   description = "Name of the kuberneter file"
 }
 
+/*
+variable "aks_secret_provider_id" {}
+variable "name_workload_identity" {}
+variable "namespace" {}
+variable "user_assigned_client_id" {}
+*/
+
+
+/*
 variable "private_cluster_enabled" {
   description = "Name of the kuberneter file"
 }
+*/

@@ -37,5 +37,13 @@ output "principal_id" {
   description = "The ID of the created AKS cluster."
   value       = azurerm_kubernetes_cluster.aks_cluster.kubelet_identity[0].object_id
 }
+/*
+output "issuer" {
+  value = azurerm_kubernetes_cluster.aks_cluster.oidc_issuer_url
+}
+*/
 
-
+output "secret_provider" {
+  description = "The ID of the created AKS cluster."
+  value       =  azurerm_kubernetes_cluster.aks_cluster.key_vault_secrets_provider[0].secret_identity[0].object_id
+}

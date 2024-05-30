@@ -14,10 +14,30 @@ resource "azurerm_key_vault" "key_vault" {
     tenant_id = var.tenant_id
     object_id = var.object_id
 
-    key_permissions       = var.key_permissions
-    secret_permissions    = var.secret_permissions
+    key_permissions         = var.key_permissions
+    secret_permissions      = var.secret_permissions
     certificate_permissions = var.certificate_permissions
   }
+
+  access_policy {
+    tenant_id = var.tenant_id
+    object_id = var.user_assigned_identity_principal_id
+
+    key_permissions         = var.key_permissions
+    secret_permissions      = var.secret_permissions
+    certificate_permissions = var.certificate_permissions
+  }
+
+  access_policy {
+    tenant_id = var.tenant_id
+    object_id = var.aks_secret_provider_id
+
+    key_permissions         = var.key_permissions
+    secret_permissions      = var.secret_permissions
+    certificate_permissions = var.certificate_permissions
+  }
+
+  
 }
 
 resource "azurerm_key_vault_secret" "key_vault_secret" {
@@ -45,3 +65,4 @@ resource "azurerm_key_vault_key" "key_vault_key" {
     notify_before_expiry = var.notify_before_expiry
   }
 }
+
