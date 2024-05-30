@@ -40,6 +40,7 @@ module "networking" {
   cluster_subnet_address_prefixes     = ["10.2.1.0/24"]
   appgw_to_cluster_peering_name       = "AppGWtoClusterVnetPeering"
   cluster_to_appgw_peering_name       = "ClustertoAppGWVnetPeering"
+  bastion_subnet_address_prefixes     = ["10.2.2.0/24"]
 }
 
 module "application_gateway" {
@@ -175,17 +176,46 @@ module "role_assignment" {
   principal_id_key_vault           = module.identity.principal_id
 }
 
-/*
+
+module "vm" {
+  source                              = "./modules/vm"
+  resource_group_name                 = module.resource_group.resource_group_name
+  resource_group_location             = module.resource_group.location
+  admin_username                      = "adminuser"
+  admin_password                      = module.key_vault.linuxVM_pswd
+  disable_password_authentication     = false
+  name                                = "tf-linux-vm-01"
+  linuxVM_nic_id                      = module.vm.linuxVM_nic_id
+  size                                = "Standard_DS1_v2"
+  caching                             = "ReadWrite"
+  storage_account_type                = "Premium_LRS"
+  publisher                           = "Canonical"
+  offer                               = "UbuntuServer"
+  sku                                 = "16.04-LTS"
+  version_vm                          = "latest"
+  nic_name                            = "linuxVM-PrivIP-nic"
+  nic_name_ip                         = "linuxVM-PrivIP-nic-ipConfig"
+  nic_subnet_id                       = module.networking.cluster_subnet_id
+  nic_ip_allocation                   = "Dynamic"
+  depends_on                          = [
+    module.networking, 
+    module.key_vault,
+  ]
+}
+
 module "bastion_host" {
   source                  = "./modules/bastion_host"
   bastion_name            = "kratos-controller"
   resource_group_location = module.resource_group.location
   resource_group_name     = module.resource_group.resource_group_name
   ip_configuration_name   = "kratos-configuration"
-  cluster_subnet_id       = module.networking.cluster_subnet_id
+  cluster_subnet_id       = module.networking.bastion_subnet_id
   bastion_public_ip       = module.networking.bastionip
+  depends_on              = [
+  module.resource_group, 
+  module.networking,        ]
 }
-*/
+
 output "resource_group_name" {
   value = module.resource_group.resource_group_name
 }
@@ -199,8 +229,15 @@ output "cluster_name" {
 }
 
 resource "random_password" "mysecret" {
-  length = 64
+  length           = 18
+  min_upper        = 2
+  min_lower        = 2
+  min_numeric      = 2
+  min_special      = 4
+  override_special = "!#$%&*()-_=+[]{}<>:?"
 }
+
+
 
 resource "null_resource" "execute_script" {
   depends_on = [
