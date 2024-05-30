@@ -12,6 +12,8 @@ clusterName=$(terraform output -raw cluster_name)
 # Ejecutar el comando de Azure CLI con los valores obtenidos
 appgwId=$(az network application-gateway list -g $resourceGroupName --query "[?name=='$applicationGatewayName'].id" -o tsv)
 
+export AKS_OIDC_ISSUER="$(az aks show --resource-group $resourceGroupName --name $clusterName --query "oidcIssuerProfile.issuerUrl" -o tsv)"
+
 # Habilita los addons para la puerta de enlace de aplicaciones
 az aks enable-addons -n $clusterName -g $resourceGroupName -a ingress-appgw --appgw-id $appgwId
 
@@ -25,3 +27,4 @@ echo "Resource Group Name: $resourceGroupName"
 echo "Application Gateway Name: $applicationGatewayName"
 echo "Cluster Name: $clusterName"
 echo "Application Gateway ID: $appgwId"
+echo $AKS_OIDC_ISSUER
