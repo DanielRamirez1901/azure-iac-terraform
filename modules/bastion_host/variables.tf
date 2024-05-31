@@ -21,3 +21,8 @@ variable "cluster_subnet_id" {
 variable "bastion_public_ip" {
   description = "The ID of the public IP address associated with the Azure Bastion Host."
 }
+
+variable "sku" {}
+
+
+

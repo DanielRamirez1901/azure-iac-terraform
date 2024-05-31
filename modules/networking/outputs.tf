@@ -8,6 +8,11 @@ output "bastionip" {
   value       = azurerm_public_ip.bastionpublicIp.id
 }
 
+output "bastion_ip_address" {
+  description = "The ID of the created Azure Public IP."
+  value       = azurerm_public_ip.bastionpublicIp.ip_address
+}
+
 output "api_vnet_name" {
   description = "The ID of the created API Virtual Network."
   value       = azurerm_virtual_network.apiVnet.name
@@ -38,4 +43,3 @@ output "bastion_subnet_id" {
   description = "The ID of the Cluster Subnet."
   value       = azurerm_subnet.AzureBastionSubnet.id
 }
-

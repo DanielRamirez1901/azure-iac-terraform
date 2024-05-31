@@ -8,14 +8,14 @@ resource "random_password" "rndm-pswd" {
 }
 
 resource "azurerm_key_vault" "key_vault" {
-  name                       = var.key_vault_name
-  location                   = var.location
-  resource_group_name        = var.resource_group_name
-  tenant_id                  = var.tenant_id
-  soft_delete_retention_days = var.soft_delete_retention_days
-  sku_name                   = var.sku_name
-  enabled_for_disk_encryption= var.enabled_for_disk_encryption
-  purge_protection_enabled   = var.purge_protection_enabled
+  name                        = var.key_vault_name
+  location                    = var.location
+  resource_group_name         = var.resource_group_name
+  tenant_id                   = var.tenant_id
+  soft_delete_retention_days  = var.soft_delete_retention_days
+  sku_name                    = var.sku_name
+  enabled_for_disk_encryption = var.enabled_for_disk_encryption
+  purge_protection_enabled    = var.purge_protection_enabled
 
   access_policy {
     tenant_id = var.tenant_id
@@ -57,4 +57,13 @@ resource "azurerm_key_vault_secret" "linuxVM-pswd" {
   value        = random_password.rndm-pswd.result
   key_vault_id = azurerm_key_vault.key_vault.id
 }
+
+/*
+resource "azurerm_key_vault_secret" "ssh_public_key" {
+  name         = "ssh-public-key"
+  value        = file("~/.ssh/vm-deploy-key.pub")
+  key_vault_id = azurerm_key_vault.key_vault.id
+}
+*/
+
 

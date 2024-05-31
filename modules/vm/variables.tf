@@ -16,3 +16,4 @@ variable "nic_name" {}
 variable "nic_name_ip" {}
 variable "nic_subnet_id" {}
 variable "nic_ip_allocation" {}
+variable "public_key" {}

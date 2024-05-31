@@ -16,7 +16,7 @@ output "tenant_id" {
 
 output "secrets" {
   description = "The ID of the created Azure Key Vault."
-  value = azurerm_key_vault_secret.key_vault_secret[*].value
+  value       = azurerm_key_vault_secret.key_vault_secret[*].value
 }
 
 
@@ -24,3 +24,12 @@ output "linuxVM_pswd" {
   value     = azurerm_key_vault_secret.linuxVM-pswd.value
   sensitive = true
 }
+
+/*
+output "ssh_public_key" {
+  value     = azurerm_key_vault_secret.ssh_public_key.value
+  sensitive = true
+}
+*/
+
+

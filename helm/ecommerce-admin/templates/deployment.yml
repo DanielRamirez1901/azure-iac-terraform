@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.name }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: {{ .Values.name }}
+spec:
+  replicas: {{ .Values.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.name }}
+    spec:
+      containers:
+      - name: {{ .Values.name }}
+        image: {{ .Values.image }}
+        ports:
+        - containerPort: {{ .Values.containerPort }}
+          env:
+          {{- range .Values.env }}
+            - name: {{ replace .name "-" "_" }}  # Reemplazar guiones por guiones bajos
+              valueFrom:
+                secretKeyRef:
+                  name: azure-kvname-user-msi
+                  key: {{ replace .name "-" "_" }}  # Reemplazar guiones por guiones bajos
+          {{- end }}
+---
+
+apiVersion: secrets-store.csi.x-k8s.io/v1
+kind: SecretProviderClass
+metadata:
+  name: ecommerce-secrets
+  namespace: default
+spec:
+  provider: azure
+  parameters:
+    usePodIdentity: "false"
+    useVMManagedIdentity: "true"
+    userAssignedIdentityID: "106431f3-2092-4de1-86d4-fb0e294c3d2a"
+    keyvaultName: "myKeyVault-107788"
+    objects:  |
+      array:
+        - |
+          objectName: NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+          objectType: secret
+        - |
+          objectName: CLERK_SECRET_KEY
+          objectType: secret
+        - |
+          objectName: NEXT_PUBLIC_CLERK_SIGN_IN_URL
+          objectType: secret
+        - |
+          objectName: NEXT_PUBLIC_CLERK_SIGN_UP_URL
+          objectType: secret
+        - |
+          objectName: NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL
+          objectType: secret
+        - |
+          objectName: NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL
+          objectType: secret
+        - |
+          objectName: DATABASE_URL
+          objectType: secret
+        - |
+          objectName: NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
+          objectType: secret
+        - |
+          objectName: CLOUDINARY_PRESET_NAME
+          objectType: secret
+        - |
+          objectName: FRONTEND_STORE_URL
+          objectType: secret
+        - |
+          objectName: STRIPE_API_KEY
+          objectType: secret
+        - |
+          objectName: STRIPE_WEBHOOK_SECRET
+          objectType: secret
+    tenantId: "e994072b-523e-4bfe-86e2-442c5e10b244"

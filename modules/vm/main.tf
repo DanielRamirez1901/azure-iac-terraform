@@ -1,7 +1,7 @@
 resource "azurerm_linux_virtual_machine" "tf-linux-vm-01" {
   admin_username                  = var.admin_username
   admin_password                  = var.admin_password
-  disable_password_authentication = var.disable_password_authentication# this must be 'true' if admin_password is not used ie., like when using admin_ssh_keys as an example
+  disable_password_authentication = var.disable_password_authentication # this must be 'true' if admin_password is not used ie., like when using admin_ssh_keys as an example
   location                        = var.resource_group_location
   name                            = var.name
   network_interface_ids = [
@@ -10,6 +10,10 @@ resource "azurerm_linux_virtual_machine" "tf-linux-vm-01" {
   resource_group_name = var.resource_group_name
   size                = var.size
 
+  admin_ssh_key {
+    username   = "adminuser"
+    public_key = var.public_key
+  }
   os_disk {
     caching              = var.caching
     storage_account_type = var.storage_account_type
@@ -28,8 +32,8 @@ resource "azurerm_network_interface" "linuxVM-PrivIP-nic" {
   name                = var.nic_name
   resource_group_name = var.resource_group_name
   ip_configuration {
-    name      = var.nic_name_ip
-    subnet_id = var.nic_subnet_id
+    name                          = var.nic_name_ip
+    subnet_id                     = var.nic_subnet_id
     private_ip_address_allocation = var.nic_ip_allocation
   }
 }

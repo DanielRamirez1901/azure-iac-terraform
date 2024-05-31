@@ -28,21 +28,67 @@ spec:
 
 ---
 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app1-nginx-deployment
+  labels:
+    app: app1-nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app1-nginx
+  template:
+    metadata:
+      labels:
+        app: app1-nginx
+    spec:
+      containers:
+        - name: app1-nginx
+          image: aslam24/nginx-web-newapp:v1
+          ports:
+            - containerPort: 80
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: app1-nginx-clusterip-service
+  labels:
+    app: app1-nginx
+spec:
+  type: ClusterIP
+  selector:
+    app: app1-nginx
+  ports:
+    - port: 80
+      targetPort: 80
+
+---
+
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: aspnetapp
- # annotations:
-  #  kubernetes.io/ingress.class: azure/application-gateways
+  name: my-ingress
+  annotations:
+    kubernetes.io/ingress.class: azure/application-gateway
 spec:
-  ingressClassName: azure-application-gateway
   rules:
   - http:
       paths:
       - path: /
+        pathType: Prefix
         backend:
           service:
             name: aspnetapp
             port:
               number: 80
-        pathType: Exact
+      - path: /app1
+        pathType: Prefix
+        backend:
+          service:
+            name: app1-nginx-clusterip-service
+            port:
+              number: 80

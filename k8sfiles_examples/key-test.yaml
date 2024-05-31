@@ -7,15 +7,15 @@ spec:
   parameters:
     usePodIdentity: "false"
     useVMManagedIdentity: "true" # Set to true for using managed identity
-    userAssignedIdentityID: "8c1e0053-4320-4bc5-ae1c-d34cfc79cf7d"   # Set the clientID of the user-assigned managed identity to use
-    keyvaultName: "myKeyVault-109988" # Set to the name of your key vault
+    userAssignedIdentityID: "106431f3-2092-4de1-86d4-fb0e294c3d2a"   # Set the clientID of the user-assigned managed identity to use
+    keyvaultName: "myKeyVault-107788" # Set to the name of your key vault
     objects:  |
       array:
         - |
-          objectName: webserver-config
+          objectName: NEXT-PUBLIC-CLERK-PUBLISHABLE-KEY
           objectType: secret # object types: secret, key, or cert
         - |
-          objectName: webserver-properties
+          objectName: CLERK-SECRET-KEY
           objectType: secret
     tenantId: "e994072b-523e-4bfe-86e2-442c5e10b244" # The tenant ID of the key vault
 ---
@@ -33,11 +33,11 @@ spec:
     volumeMounts:
     - mountPath: "/app/config.conf"
       name: webserver-configuration
-      subPath: webserver-config
+      subPath: NEXT-PUBLIC-CLERK-PUBLISHABLE-KEY
       readOnly: true
     - mountPath: "/app/application.properties"
       name: webserver-configuration
-      subPath: webserver-properties
+      subPath: CLERK-SECRET-KEY
       readOnly: true
   volumes:
   - name: webserver-configuration

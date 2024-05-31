@@ -1,0 +1,32 @@
+{{- with .Values }}
+{{- range .volumes }}
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ .name }}-volume
+  namespace: {{ $.Values.namespace }}
+  labels:
+    type: local
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 2Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/tmp/data"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .name }}-claim
+  namespace: {{ $.Values.namespace }}
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+{{- end}}
+{{- end}}

@@ -1,0 +1,20 @@
+name: ecommerce-db
+namespace: default
+replicas: 1
+image: mysql:latest
+containerPort: 3306
+service:
+  portname: tcp
+  port: 3306
+  targetPort: 3306
+
+env:
+  - name: MYSQL_ROOT_PASSWORD
+    value: "Password123!"
+  - name: MYSQL_DATABASE
+    value: "ecommerce"
+
+volumes:
+  - name: db-pv-storage
+    claimName: db-pv-claim
+    mountPath: /var/lib/mysql
