@@ -620,3 +620,153 @@ El codigo encontrado en [modules/vm](modules/vm/main.tf) se utiliza para crear u
 
 Este código crea una máquina virtual de Linux en Azure con una interfaz de red configurada y una imagen de la máquina virtual seleccionada.
 
+
+## Integración de modulos
+
+En el codigo de main.tf se encuentran todos los modulos con los valores de los recursos de dichos modulos, cabe recalcar que al finalizar el modulo se encuentran unos outputs y un script para guardar variables que sirven para activar caracteristicas de los recursos, tales como el api gateway en el ingress para el cluster de azure o el managed identity para el cluster, entre otras caracteristicas
+
+## Kubernetes Files
+
+Su usaran varios tipos de archivos kubernetes para poder usar los microservicios de ecommerce admin y ecommerce store, en total se usaran estos archivos:
+
+<p align="center">
+  <img src="./images/image4.png">
+</p>
+
+Si desea conocer el uso de key vaults e ingress, dichos recursos se encuentran en [esta carpeta](k8s-files/k8sfiles_examples/)
+
+##
+
+## Procedimiento
+
+Luego de aplicar `terraform apply` en la infraestructura con terraform y que esta se encuentre disponible en azure
+
+<p align="center">
+  <img src="./images/image8.png">
+</p>
+
+procedemos a configurar el bastion_host para acceder al cluster de azure.
+
+Para ello realizamos los siguientes pasos, obtenemos el ID de la maquina virtual con el siguiente comando
+
+az vm show --resource-group <nombre-del-grupo-de-recursos> --name <nombre-de-la-vm> --query "id" --output tsv 
+
+luego, ejecutamos el siguiente comando para acceder por ssh al bastion
+
+az network bastion ssh --name $bastionHostName --resource-group $resourceGroupName --target-resource-id $vmId --auth-type "ssh-key" --username adminuser --ssh-key ~/.ssh/vm-deploy-key
+
+el [script](script.sh) ya nos habra generado una llave ssh por lo que este comando la usara para entrar a la maquina virtual con el bastion
+
+Luego, adentro de la maquina ejecutamos los siguientes comandos
+
+curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+curl -LO https://storage.googleapis.com/kubernetes-release/release/`curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt`/bin/linux/amd64/kubectl
+chmod +x ./kubectl
+sudo mv ./kubectl /usr/local/bin/kubectl
+az login
+az aks get-credentials --name <cluster_name> --resource-group <resource_group_name> --admin
+
+que nos permitiran instalar kubernetes e ingresar al cluster de aks para poder administrarlo
+
+<p align="center">
+  <img src="./images/image12.png">
+</p>
+
+
+procedemos a crear un pipeline que utilice como base la plantilla `Deploy to Azure Kubernetes Service`
+
+<p align="center">
+  <img src="./images/image5.png">
+</p>
+
+### Explicacion del Pipeline
+
+Los pipelines se encuentran en dos repos, ya que cada uno activara el pipeline del microservicio correspondiente, ambos tienen la misma funcion pero su diferencia es el microservicio que actualizaran
+
+[Pipeline Ecommerce Store Microservice here](https://github.com/DanielRamirez1901/CI-CD-Store-Microservice-Azure)
+
+[Pipeline Ecommerce Admin Microservice here](https://github.com/DanielRamirez1901/CI-CD-Admin-Microservice-Azure)
+
+ 
+### Configuración del Pipeline
+
+### Triggers y Recursos
+
+- **Trigger**: Se ejecuta automáticamente al haber cambios en la rama `main`.
+- **Recursos**: Utiliza el repositorio de código fuente como recurso.
+
+### Variables
+
+- **dockerRegistryServiceConnection**: ID de la conexión al registro de contenedores.
+- **imageRepository**: Nombre del repositorio de la imagen.
+- **containerRegistry**: URL del registro de contenedores.
+- **dockerfilePath**: Ruta al Dockerfile.
+- **tag**: Etiqueta de la imagen, usando el ID de la compilación.
+- **imagePullSecret**: Secreto de autenticación para el registro.
+
+### Etapas del Pipeline
+
+#### Etapa 1: Build
+
+1. **Compilar y subir imagen**: Construye la imagen Docker y la sube al registro de contenedores de Azure.
+2. **Subir manifiestos**: Sube los archivos YAML de despliegue como artefactos.
+
+#### Etapa 2: Deploy
+
+1. **Instalar Git**: Instala Git en el agente.
+2. **Clonar repositorio y actualizar YAML**: Clona el repositorio, actualiza el archivo YAML con la nueva etiqueta de imagen.
+3. **Desplegar a AKS**: Obtiene credenciales del clúster AKS y aplica el archivo YAML actualizado con `kubectl`.
+
+## Resumen
+
+El pipeline construye una nueva imagen Docker, la sube al registro de contenedores, actualiza los archivos de despliegue con la nueva imagen y despliega la aplicación al clúster AKS, garantizando una integración y despliegue continuos.
+
+Cabe recalcar que se esta usando un agente self hosted en una maquina virtual linux
+
+<p align="center">
+  <img src="./images/image6.png">
+</p>
+
+## Procedimiento
+
+
+### Flujo de la Aplicación
+
+1. **Cambio en el Repositorio**:
+   - Un cambio en el código del repositorio, como modificar el título de un archivo de texto mostrado en la interfaz del microservicio.
+   - Luego realizamos el push al repo para que este tome los cambios y se activa automáticamente el pipeline.
+
+<p align="center">
+  <img src="./images/image7.png">
+</p>
+
+
+2. **Fase 1: Construcción y Push de Imagen**:
+   - El pipeline construye una nueva imagen Docker usando el Dockerfile del repositorio.
+   - La imagen se sube al Azure Container Registry con una nueva etiqueta (tag).
+
+3. **Fase 2: Actualización y Despliegue**:
+   - Se clona el repositorio que contiene los archivos de configuración de Kubernetes.
+   - El pipeline busca y actualiza la línea del archivo YAML que especifica la imagen del microservicio, cambiando el tag por el recién creado.
+   - Los cambios se aplican al clúster de AKS, desplegando la nueva imagen.
+
+<p align="center">
+  <img src="./images/image9.png">
+</p>
+
+4. **Acceso y Comunicación**:
+   - La aplicación desplegada se puede acceder a través de la IP del API Gateway, que se comunica con los pods mediante Ingress y rutas definidas.
+   - Para usar la aplicacion, puedes agregar un producto en el microservicio ecommerce-admin y luego, puedes visualizar dicho productos, comprarlo y añadirlo a tu carrito en el microservicio ecommerce-store
+<p align="center">
+  <img src="./images/image10.png">
+</p>
+
+<p align="center">
+  <img src="./images/image11.png">
+</p>
+
+   - Para administrar los microservicios, se puede acceder al clúster mediante la Bastion Host, utilizando credenciales de la cuenta de Azure vinculada.
+   - Desde la Bastion Host, es posible ejecutar comandos para verificar el estado de los pods y otros recursos.
+
+Este proceso asegura que cualquier cambio en el código se propague automáticamente desde el repositorio hasta el despliegue en el clúster de AKS, facilitando una integración y despliegue continuos (CI/CD).
+
