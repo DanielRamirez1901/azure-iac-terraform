@@ -1,4 +1,0 @@
-apiVersion: v2
-name: aks-secret-provider
-description: A Helm chart for deploying aks secret provider microservice
-version: 0.1.0

@@ -57,13 +57,3 @@ resource "azurerm_key_vault_secret" "linuxVM-pswd" {
   value        = random_password.rndm-pswd.result
   key_vault_id = azurerm_key_vault.key_vault.id
 }
-
-/*
-resource "azurerm_key_vault_secret" "ssh_public_key" {
-  name         = "ssh-public-key"
-  value        = file("~/.ssh/vm-deploy-key.pub")
-  key_vault_id = azurerm_key_vault.key_vault.id
-}
-*/
-
-

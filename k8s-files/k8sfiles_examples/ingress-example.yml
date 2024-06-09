@@ -2,6 +2,7 @@ apiVersion: v1
 kind: Pod
 metadata:
   name: aspnetapp
+  namespace: ecommerce
   labels:
     app: aspnetapp
 spec:
@@ -18,6 +19,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: aspnetapp
+  namespace: ecommerce
 spec:
   selector:
     app: aspnetapp
@@ -32,6 +34,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: app1-nginx-deployment
+  namespace: ecommerce
   labels:
     app: app1-nginx
 spec:
@@ -56,6 +59,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: app1-nginx-clusterip-service
+  namespace: ecommerce
   labels:
     app: app1-nginx
 spec:
@@ -72,6 +76,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: my-ingress
+  namespace: ecommerce
   annotations:
     kubernetes.io/ingress.class: azure/application-gateway
 spec:

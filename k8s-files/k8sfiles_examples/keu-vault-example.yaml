@@ -1,0 +1,84 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ecommerce
+---
+apiVersion: secrets-store.csi.x-k8s.io/v1
+kind: SecretProviderClass
+metadata:
+  name: azure-kvname-user-msi
+  namespace: ecommerce
+spec:
+  provider: azure
+  parameters:
+    usePodIdentity: "false"
+    useVMManagedIdentity: "true"
+    userAssignedIdentityID: "5960d43b-4b4f-414c-87f4-14f926b63835"
+    keyvaultName: "myKeyVault-1088"
+    objects: |
+      array:
+        - |
+          objectName: SERVICE-PORT
+          objectType: secret
+        - |
+          objectName: SERVICE-IP
+          objectType: secret
+        - |
+          objectName: UNCHANGED-REFERENCE
+          objectType: secret
+        - |
+          objectName: PROTOCOL
+          objectType: secret
+        - |
+          objectName: SERVICE-ADDRESS
+          objectType: secret
+        - |
+          objectName: ESCAPED-REFERENCE
+          objectType: secret
+    tenantId: "e994072b-523e-4bfe-86e2-442c5e10b244"
+  secretObjects:
+  - secretName: SERVICE-PORT
+    type: Opaque
+  - secretName: SERVICE-IP
+    type: Opaque
+  - secretName: UNCHANGED-REFERENCE
+    type: Opaque
+  - secretName: PROTOCOL
+    type: Opaque
+  - secretName: SERVICE-ADDRESS
+    type: Opaque
+  - secretName: ESCAPED-REFERENCE
+    type: Opaque
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: dependent-envars-demo
+  namespace: ecommerce
+spec:
+  containers:
+    - name: dependent-envars-demo
+      image: busybox:1.28
+      command:
+        - sh
+        - -c
+        - |
+          while true; do 
+            echo -en '\n'; 
+            printf "UNCHANGED_REFERENCE=$(cat /mnt/secrets-store/UNCHANGED-REFERENCE)\n"; 
+            printf "SERVICE_ADDRESS=$(cat /mnt/secrets-store/SERVICE-ADDRESS)\n";
+            printf "ESCAPED_REFERENCE=$(cat /mnt/secrets-store/ESCAPED-REFERENCE)\n"; 
+            sleep 30; 
+          done;
+      env: []
+      volumeMounts:
+      - name: secrets-store-inline
+        mountPath: /mnt/secrets-store
+        readOnly: true
+  volumes:
+    - name: secrets-store-inline
+      csi:
+        driver: secrets-store.csi.k8s.io
+        readOnly: true
+        volumeAttributes:
+          secretProviderClass: "azure-kvname-user-msi"

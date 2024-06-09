@@ -1,5 +1,3 @@
-# application_gateway/main.tf
-
 resource "azurerm_application_gateway" "myApplicationGateway" {
   name                = var.application_gateway_name
   resource_group_name = var.resource_group_name

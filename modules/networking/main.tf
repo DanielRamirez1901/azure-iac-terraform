@@ -1,7 +1,3 @@
-# network/main.tf
-
-
-# Ip Publica para asociarla al Api Gateway
 resource "azurerm_public_ip" "publicIp" {
   name                = var.public_ip_name
   location            = var.location
@@ -18,28 +14,27 @@ resource "azurerm_public_ip" "bastionpublicIp" {
   sku                 = var.sku
 }
 
-# Virtual Network sobre lo que estara asociado el Api Gateway
 resource "azurerm_virtual_network" "apiVnet" {
   name                = var.api_vnet_name
   resource_group_name = var.resource_group_name
   location            = var.location
   address_space       = var.api_vnet_address_space
 }
-# Subred en la que estara el Api Gateway
+
 resource "azurerm_subnet" "apiGatewaySubnet" {
   name                 = var.api_gateway_subnet_name
   resource_group_name  = var.resource_group_name
   virtual_network_name = azurerm_virtual_network.apiVnet.name
   address_prefixes     = var.api_gateway_subnet_address_prefixes
 }
-# Virtual Network sobre lo que estara asociado el Cluster
+
 resource "azurerm_virtual_network" "clusterVnet" {
   name                = var.cluster_vnet_name
   resource_group_name = var.resource_group_name
   location            = var.location
   address_space       = var.cluster_vnet_address_space
 }
-# Subred en la que estara el Cluster
+
 resource "azurerm_subnet" "clusterSubnet" {
   name                 = var.cluster_subnet_name
   resource_group_name  = var.resource_group_name
@@ -63,7 +58,6 @@ resource "azurerm_virtual_network_peering" "ClustertoAppGWVnetPeering" {
   allow_virtual_network_access = true
 }
 
-# Subred en la que estara el Bastion
 resource "azurerm_subnet" "AzureBastionSubnet" {
   name                 = "AzureBastionSubnet"
   resource_group_name  = var.resource_group_name

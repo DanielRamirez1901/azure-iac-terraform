@@ -3,4 +3,5 @@ resource "azurerm_container_registry" "acrk8s" {
   resource_group_name = var.resource_group_name
   location            = var.resource_group_location
   sku                 = var.container_sku
+  admin_enabled       = var.admin_enabled
 }

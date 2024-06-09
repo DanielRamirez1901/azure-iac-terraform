@@ -1,12 +1,8 @@
-# Create Network Security Group and rule
 resource "azurerm_network_security_group" "bastion-security-group" {
-  name = var.name
-  #provide a value for the location
-  location = var.resource_group_location
-  #provide a value for the resource group
+  name                = var.name
+  location            = var.resource_group_location
   resource_group_name = var.resource_group_name
 
-  #Provision a security rule with your current IP as a source filter
   security_rule {
     name                       = var.security_name
     priority                   = var.security_priority

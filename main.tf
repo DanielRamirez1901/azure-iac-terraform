@@ -4,6 +4,11 @@ provider "azurerm" {
 
 data "azurerm_client_config" "current" {}
 
+data "template_file" "linux-vm-cloud-init" {
+  template = file("sonar.sh")
+}
+
+
 locals {
   backend_address_pool_name      = "${module.networking.api_vnet_name}-beap"
   frontend_port_HTTP_name        = "${module.networking.api_vnet_name}-fe_HTTP_port"
@@ -16,11 +21,13 @@ locals {
   current_user_id                = coalesce(null, data.azurerm_client_config.current.object_id)
 }
 
+
 module "resource_group" {
   source              = "./modules/resource_group"
   resource_group_name = "apiK8sRss"
   location            = "East US"
 }
+
 
 module "networking" {
   source                              = "./modules/networking"
@@ -42,6 +49,7 @@ module "networking" {
   cluster_to_appgw_peering_name       = "ClustertoAppGWVnetPeering"
   bastion_subnet_address_prefixes     = ["10.2.2.0/24"]
 }
+
 
 module "application_gateway" {
   source                                          = "./modules/application_gateway"
@@ -75,6 +83,7 @@ module "application_gateway" {
   request_routing_rule_backend_http_settings_name = local.http_setting_name
 }
 
+
 module "aks_cluster" {
   source                  = "./modules/aks_cluster"
   cluster_name            = "myCluster"
@@ -82,7 +91,7 @@ module "aks_cluster" {
   location                = module.resource_group.location
   dns_prefix              = "myClusterDns"
   node_pool_name          = "nodepool"
-  node_count              = 1
+  node_count              = 2
   vm_size                 = "Standard_D2_v2"
   os_disk_size_gb         = 40
   vnet_subnet_id          = module.networking.cluster_subnet_id
@@ -90,15 +99,12 @@ module "aks_cluster" {
   identity_type           = "SystemAssigned"
   local_file_name         = "kubeconfig"
   secret_rotation_enabled = true
-  //name_workload_identity  = "workload-identity-sa"
-  //namespace               = "default"
-  //user_assigned_client_id = module.identity.client_id
-  //private_cluster_enabled = true
 }
+
 
 module "key_vault" {
   source                              = "./modules/key_vault"
-  key_vault_name                      = "myKeyVault-107788"
+  key_vault_name                      = "myKeyVault-107488"
   resource_group_name                 = module.resource_group.resource_group_name
   location                            = module.resource_group.location
   tenant_id                           = data.azurerm_client_config.current.tenant_id
@@ -110,8 +116,8 @@ module "key_vault" {
   key_permissions                     = ["Get", "Create", "List", "Delete", "Purge", "Recover", "SetRotationPolicy", "GetRotationPolicy"]
   secret_permissions                  = ["Get", "Set", "List", "Delete", "Purge", "Recover"]
   certificate_permissions             = ["Get"]
-  secret_names                        = ["NEXT-PUBLIC-CLERK-PUBLISHABLE-KEY", "CLERK-SECRET-KEY", "NEXT-PUBLIC-CLERK-SIGN-IN-URL", "NEXT-PUBLIC-CLERK-SIGN-UP-URL", "NEXT-PUBLIC-CLERK-AFTER-SIGN-IN-URL", "NEXT-PUBLIC-CLERK-AFTER-SIGN-UP-URL", "DATABASE-URL", "NEXT-PUBLIC-CLOUDINARY-CLOUD-NAME", "CLOUDINARY-PRESET-NAME", "FRONTEND-STORE-URL", "STRIPE-API-KEY", "STRIPE-WEBHOOK-SECRET"]
-  secret_values                       = ["pk_test_b3B0aW11bS1hbW9lYmEtMjcuY2xlcmsuYWNjb3VudHMuZGV2JA", "sk_test_Pnph4tdr83lu1zXwQleaH0DTutvnnFGgH9BdQ4gvT0", "/sign-in", "/sign-up", "/", "/", "mysql://root:Password123!@ecommerce-db:3306/ecommerce?verifyServerCertificate=false", "du47bn0tn", "rl1uzqmr", "http://ecommerce-store:3001", "", ""]
+  secret_names                        = ["NEXT-PUBLIC-CLERK-PUBLISHABLE-KEY", "CLERK-SECRET-KEY", "NEXT-PUBLIC-CLERK-SIGN-IN-URL", "NEXT-PUBLIC-CLERK-AFTER-SIGN-IN-URL", "DATABASE-URL", "NEXT-PUBLIC-CLOUDINARY-CLOUD-NAME", "NEXT-PUBLIC-CLERK-SIGN-UP-URL", "NEXT-PUBLIC-CLERK-AFTER-SIGN-UP-URL", "CLOUDINARY-PRESET-NAME", "FRONTEND-STORE-URL", "STRIPE-API-KEY", "STRIPE-WEBHOOK-SECRET", "NEXT-PUBLIC-API-URL", "REACT-EDITOR", "BILLBOARD-ID"]
+  secret_values                       = ["pk_test_Y2FwaXRhbC1odW1wYmFjay01NC5jbGVyay5hY2NvdW50cy5kZXYk", "sk_test_M41hUtSCghLofhQpfdby0kGTY6j06Aa1SpJuC3HVnA", "/sign-in", "/", "mysql://admin:Pass123.@mysql:3306/ecommerce_db", "dytwq4xsw", "/sign-up", "/", "rl1uzqmr", "http://ecommerce-store:3001", "sk_test_51PO94nBr9QdWwf17VX0iiy5xLxwqs76mEaYkETOxEP1VHUG7qx9xJvm7g4A9PgQZRWWjirc8hhKYP0JxwormvzM10031eQM9yY", "whsec_2e8232ce37563694ff7ab24cc639b87be827081ca5ff366d0faa88c51fe03f59", "http://ecommerce-admin:3000/api/dfe14b20-592c-4dbc-85b8-f3739f400d03", "atom", "d14dffbb-7caf-405a-bb16-6a5d488d6ff4"]
   key_names                           = ["myKey1", "myKey2"]
   key_types                           = ["RSA", "RSA"]
   key_sizes                           = [2048, 2048]
@@ -129,40 +135,16 @@ module "identity" {
   name                = "myUserAssignedIdentity"
   resource_group_name = module.resource_group.resource_group_name
   location            = module.resource_group.location
-  /*
-  credential_aks_name = "aksfederatedidentity"
-  issuer              = module.aks_cluster.issuer  
-  subject             = module.aks_cluster.cluster_name 
-  audience            = ["api://AzureADTokenExchange"]
-  */
 }
 
-
-/*
-module "helm" {
-  source                 = "./modules/helm"
-  helm_name              = "aks-secret-provider"
-  helm_chart             = "./aks-secret-provider"
-  helm_version           = "0.0.1"
-  helm_vaulname          = module.key_vault.name
-  helm_tenandid          = module.key_vault.tenant_id
-  helm_clientid          = module.aks_cluster.clientId
-  helm_secrets           = module.key_vault.secrets
-  helm_force_update      = true
-  host                   = module.aks_cluster.host
-  client_certificate     = module.aks_cluster.client_certificate
-  client_key             = module.aks_cluster.client_key
-  cluster_ca_certificate = module.aks_cluster.cluster_ca_certificate
-}
-
-*/
 
 module "container_registry" {
   source                  = "./modules/container_registry"
-  container_name          = "containerRegistryK8SProjectExample"
+  container_name          = "acrK8SProjectEcommerce"
   resource_group_name     = module.resource_group.resource_group_name
   resource_group_location = module.resource_group.location
   container_sku           = "Standard"
+  admin_enabled           = false
 }
 
 module "role_assignment" {
@@ -175,12 +157,8 @@ module "role_assignment" {
   role_definition_name_key_vault   = "Key Vault Secrets User"
   principal_id_key_vault           = module.identity.principal_id
 }
-/*
-resource "tls_private_key" "ubn_ssh" {
-  algorithm = "RSA"
-  rsa_bits  = 4096
-}
-*/
+
+
 module "vm" {
   source                          = "./modules/vm"
   resource_group_name             = module.resource_group.resource_group_name
@@ -190,6 +168,7 @@ module "vm" {
   public_key                      = file("~/.ssh/vm-deploy-key.pub")
   disable_password_authentication = true
   name                            = "tf-linux-vm-01"
+  custom_data                     = base64encode(data.template_file.linux-vm-cloud-init.rendered)
   linuxVM_nic_id                  = module.vm.linuxVM_nic_id
   size                            = "Standard_DS1_v2"
   caching                         = "ReadWrite"
@@ -209,7 +188,6 @@ module "vm" {
 }
 
 
-
 module "bastion_host" {
   source                  = "./modules/bastion_host"
   bastion_name            = "kratos-controller"
@@ -223,6 +201,7 @@ module "bastion_host" {
     module.resource_group,
   module.networking, ]
 }
+
 
 module "security_group" {
   source                              = "./modules/security_group"
@@ -262,6 +241,19 @@ output "cluster_name" {
   value = module.aks_cluster.cluster_name
 }
 
+output "acr_name" {
+  value = module.container_registry.name
+}
+
+output "bastion_host_name" {
+  value = module.bastion_host.name
+}
+
+output "vm_name" {
+  value = module.vm.name
+}
+
+
 resource "random_password" "mysecret" {
   length           = 18
   min_upper        = 2
@@ -272,7 +264,6 @@ resource "random_password" "mysecret" {
 }
 
 
-
 resource "null_resource" "execute_script" {
   depends_on = [
     module.application_gateway,
@@ -280,15 +271,22 @@ resource "null_resource" "execute_script" {
     module.aks_cluster,
     module.role_assignment,
     module.container_registry,
-    //module.helm,
     module.networking,
-    module.resource_group
-
+    module.resource_group,
+    module.security_group,
+    module.bastion_host,
+    module.vm
   ]
+
+  triggers = {
+    always_run = "${timestamp()}"
+  }
+
   provisioner "local-exec" {
     command = "chmod +x script.sh && ./script.sh"
   }
 }
+
 
 
 

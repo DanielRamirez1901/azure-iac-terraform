@@ -1,5 +1,0 @@
-vaultName: "keywithhelmcluster"
-tenantId: "e994072b-523e-4bfe-86e2-442c5e10b244"
-clientId: "759cb4ea-709b-4827-bd17-8053058653c7"
-secrets:
-  - "mysecret"

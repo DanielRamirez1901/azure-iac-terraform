@@ -1,0 +1,116 @@
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ecommerce-admin
+  namespace: ecommerce
+  labels:
+    app: ecommerce-admin
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ecommerce-admin
+  template:
+    metadata:
+      labels:
+        app: ecommerce-admin
+    spec:
+      containers:
+        - name: ecommerce-admin
+          image: acrk8sprojectecommerce.azurecr.io/ecommerce-admin:33
+          ports:
+            - containerPort: 3000
+          env:
+            - name: NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: azure-keyvault-secrets
+                  key: NEXT-PUBLIC-CLERK-PUBLISHABLE-KEY
+            - name: CLERK_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: azure-keyvault-secrets
+                  key: CLERK-SECRET-KEY
+            - name: NEXT_PUBLIC_CLERK_SIGN_IN_URL
+              valueFrom:
+                secretKeyRef:
+                  name: azure-keyvault-secrets
+                  key: NEXT-PUBLIC-CLERK-SIGN-IN-URL
+            - name: NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL
+              valueFrom:
+                secretKeyRef:
+                  name: azure-keyvault-secrets
+                  key: NEXT-PUBLIC-CLERK-AFTER-SIGN-IN-URL
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: azure-keyvault-secrets
+                  key: DATABASE-URL
+            - name: NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: azure-keyvault-secrets
+                  key: NEXT-PUBLIC-CLOUDINARY-CLOUD-NAME
+            - name: NEXT_PUBLIC_CLERK_SIGN_UP_URL
+              valueFrom:
+                secretKeyRef:
+                  name: azure-keyvault-secrets
+                  key: NEXT-PUBLIC-CLERK-SIGN-UP-URL
+            - name: NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL
+              valueFrom:
+                secretKeyRef:
+                  name: azure-keyvault-secrets
+                  key: NEXT-PUBLIC-CLERK-AFTER-SIGN-UP-URL
+            - name: CLOUDINARY_PRESET_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: azure-keyvault-secrets
+                  key: CLOUDINARY-PRESET-NAME
+            - name: FRONTEND_STORE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: azure-keyvault-secrets
+                  key: FRONTEND-STORE-URL
+            - name: STRIPE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: azure-keyvault-secrets
+                  key: STRIPE-API-KEY
+            - name: STRIPE_WEBHOOK_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: azure-keyvault-secrets
+                  key: STRIPE-WEBHOOK-SECRET
+          volumeMounts:
+            - name: secrets-store-inline
+              mountPath: /mnt/secrets-store
+              readOnly: true
+      volumes:
+        - name: secrets-store-inline
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: "azure-kvname-user-msi"
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: ecommerce-admin
+  namespace: ecommerce
+spec:
+  selector:
+    app: ecommerce-admin
+  ports:
+    - name: http
+      port: 3000
+      targetPort: 3000
+  type: ClusterIP
+
+
+
+
+
