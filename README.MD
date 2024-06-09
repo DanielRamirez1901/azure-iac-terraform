@@ -645,35 +645,62 @@ Luego de aplicar `terraform apply` en la infraestructura con terraform y que est
   <img src="./images/image8.png">
 </p>
 
-procedemos a configurar el bastion_host para acceder al cluster de azure.
 
-Para ello realizamos los siguientes pasos, obtenemos el ID de la maquina virtual con el siguiente comando
 
-az vm show --resource-group <nombre-del-grupo-de-recursos> --name <nombre-de-la-vm> --query "id" --output tsv 
+## Configuración de Bastion Host para Acceso al Clúster de Azure
 
-luego, ejecutamos el siguiente comando para acceder por ssh al bastion
+Para configurar el Bastion Host y acceder al clúster de Azure, siga estos pasos:
 
+### 1. Obtener el ID de la Máquina Virtual
+
+Ejecute el siguiente comando para obtener el ID de la máquina virtual:
+
+```bash
+az vm show --resource-group <nombre-del-grupo-de-recursos> --name <nombre-de-la-vm> --query "id" --output tsv
+```
+
+### 2. Acceder a la Máquina Virtual mediante Bastion
+
+Utilice el siguiente comando para acceder a la máquina virtual a través de Bastion usando SSH:
+
+```bash
 az network bastion ssh --name $bastionHostName --resource-group $resourceGroupName --target-resource-id $vmId --auth-type "ssh-key" --username adminuser --ssh-key ~/.ssh/vm-deploy-key
+```
 
-el [script](script.sh) ya nos habra generado una llave ssh por lo que este comando la usara para entrar a la maquina virtual con el bastion
+> Nota: El [script](script.sh) ya habrá generado una llave SSH, por lo que este comando la usará para acceder a la máquina virtual mediante Bastion.
 
-Luego, adentro de la maquina ejecutamos los siguientes comandos
+### 3. Instalar Herramientas en la Máquina Virtual
 
+Una vez dentro de la máquina virtual, ejecute los siguientes comandos para instalar la CLI de Azure y kubectl:
+
+```bash
+# Instalar Azure CLI
 curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
-curl -LO https://storage.googleapis.com/kubernetes-release/release/`curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt`/bin/linux/amd64/kubectl
+
+# Descargar e instalar kubectl
+curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl
 chmod +x ./kubectl
 sudo mv ./kubectl /usr/local/bin/kubectl
+```
+
+### 4. Iniciar Sesión en Azure y Obtener Credenciales del Clúster
+
+Ejecute los siguientes comandos para iniciar sesión en Azure y obtener las credenciales del clúster AKS:
+
+```bash
 az login
 az aks get-credentials --name <cluster_name> --resource-group <resource_group_name> --admin
+```
 
-que nos permitiran instalar kubernetes e ingresar al cluster de aks para poder administrarlo
+Estos comandos permitirán instalar las herramientas necesarias y acceder al clúster de AKS para administrarlo.
 
 <p align="center">
-  <img src="./images/image12.png">
+  <img src="./images/image12.png" alt="Diagrama de configuración">
 </p>
 
+### Pipelines
 
-procedemos a crear un pipeline que utilice como base la plantilla `Deploy to Azure Kubernetes Service`
+Procedemos a crear un pipeline que utilice como base la plantilla `Deploy to Azure Kubernetes Service`
 
 <p align="center">
   <img src="./images/image5.png">
@@ -770,3 +797,6 @@ Cabe recalcar que se esta usando un agente self hosted en una maquina virtual li
 
 Este proceso asegura que cualquier cambio en el código se propague automáticamente desde el repositorio hasta el despliegue en el clúster de AKS, facilitando una integración y despliegue continuos (CI/CD).
 
+# Autor
+
+[Daniel Ramirez](https://github.com/DanielRamirez1901)
