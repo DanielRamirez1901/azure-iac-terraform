@@ -1,6 +1,7 @@
 # Creando una infraestructura de microservicios en azure con terraform
 
-En este proyecto, se creara una infraestructura que sera desplegada en la nube de azure con terraform, en dicha infraestructura se encontraran varios microservicios los cuales estaran contenerizados con docker y desplegados con kubernetes en la nube de azure, se usara ademas, azure devops para activar unos pipelines en caso de modificarse el codigo de alguno de estos microservicios para asi, desplegar el microservicio con la imagen mas reciente en la nube, ademas, se gestionaran sus secretos mediante key vaults de azure y se accederan a los microservicios por medio de un api gateway que se conectara al ingress del cluster de azure para permitir la conectividad hacia los microservicios, por ultimo, se usara la herramienta ofrecida por azure para el monitoreo interno del cluster con prometheus y grafana
+
+En este proyecto, se creará una infraestructura desplegada en la nube de Azure utilizando Terraform. Esta infraestructura incluirá varios microservicios que estarán contenerizados con Docker y desplegados con Kubernetes en Azure. Además, se utilizará Azure DevOps para activar pipelines cuando se modifique el código de algún microservicio, permitiendo así desplegar la versión más reciente del microservicio en la nube. La gestión de secretos se realizará mediante Azure Key Vault, y el acceso a los microservicios se hará a través de un API Gateway que se conectará al Ingress del clúster de Azure, facilitando la conectividad hacia los microservicios.
 
 
 # Diagrama de infraestructura
